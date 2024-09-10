@@ -557,8 +557,8 @@ class Send_Dian:
                 invoice.save()
             data = {'token':f'Bearer {self.invoice["company"]["token"]}', 'pdf': f"{self.invoice["company"]["documentI"]}/{_response['urlinvoicepdf']}",'prefix':self.invoice['prefix'],'number':self.invoice['number'],
                         'email':[{'email':self.invoice['branch']['email']}] if str(self.invoice['customer']['identification_number']) == "222222222222" else [{'email':self.invoice['branch']['email'],'email': self.invoice['customer']['email']}]}
-            if result:
-                self.Send_Emial(data)
+            # if result:
+            #     self.Send_Emial(data)
         else:
             messages = "ERROR, ESTA COMPAÑIA NO ESTA EN VERIFICADA"
             print("Error")
