@@ -538,6 +538,9 @@ class Product(models.Model):
 			_data['calculate_profit_percentages'] = cls.calculate_profit_percentages_one_quantity(_product)
 			_data['calculate_profit_amount'] = cls.calculate_profit_amount(_product)
 			_data['pk_category'] = _data['pk_cat']
+			_data['name_category'] = Category.objects.get( pk = _data['pk_cat']).name
+			_data['list_category'] = Category.get_list_category({'pk_branch':branch.pk})
+			_data['unit_measures_name'] = Unit_Measures.objects.get( pk = _data['unit_measures']).name
 			_data['list_subcategory'] = SubCategory.get_list_subcategory(_data)
 			_data['pk_employee'] = pk_employee
 			_data['list_supplier'] = Supplier.list_supplier(_data)

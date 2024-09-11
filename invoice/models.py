@@ -148,6 +148,10 @@ class Invoice(models.Model):
 		data['branch'] = json.loads(branch)[0]['fields']
 		resolution = serializers.serialize('json', [Resolution.objects.get(branch= _branch, type_document_id = data['type_document'])])
 		data['resolution'] = json.loads(resolution)[0]['fields']
+		data['resolution']['to'] = data['resolution']['_to']
+		data['type_document_id_company'] = Type_Document_I.objects.get(pk = data['company']['type_regime']).name
+		data['branch']['municipalities_branch'] = Municipalities.objects.get(pk = data['branch']['municipality']).name
+		data['payment_form']['name_payment_method'] = Payment_Method.objects.get(pk = data['payment_form']['payment_method']).name
 
 		return data
 
