@@ -119,8 +119,69 @@ class Invoice(models.Model):
 	    	invoice_date = str(i.date)
 	    	total = int(i.total)
 	    	totals_by_date[invoice_date] = totals_by_date.get(invoice_date, 0) + total
-		
 	    return totals_by_date
+
+	@staticmethod
+	def values_taxes(cls,invoice,tax):
+		total_base = 0
+		total_tax = 0
+		for item in invoice:
+		    if int(tax) == int(item['tax_value']) and int(tax) != 45:
+		        total_tax += round((item['tax']  * item['quantity']))
+		        total_base += round((item['cost'] + item['tax']) * item['quantity'])
+		    if int(item['ipo']) > 0 and int(tax) == 45:
+		        total_tax += round((item['ipo']  * item['quantity']))
+		        total_base +=  round((item['cost'] + item['tax']) * item['quantity'])
+		        cls.quantity_ipo = item['quantity']
+		        cls.ipo_unit = item['ipo']
+		return {str(tax): total_tax, 'base': total_base}
+
+	@staticmethod
+	def Tax_Totals(cls,invoice):
+	    taxes = []
+	    tax_19 = cls.values_taxes(cls,invoice, 19)
+	    tax_5 = cls.values_taxes(cls,invoice, 5)
+	    tax_0 = cls.values_taxes(cls,invoice, 0)
+	    ipo_value = cls.values_taxes(cls,invoice, 45)
+
+	    if tax_19['base'] != 0:
+	        taxes.append({
+	            "tax_id": 1,
+	            "tax_amount": str(tax_19['19']),
+	            "percent": "19",
+	            "taxable_amount": str(tax_19['base']),
+	            "name":'IVA'
+	        })
+	    if tax_5['base'] != 0:
+	        taxes.append({
+	            "tax_id": 1,
+	            "tax_amount": str(tax_5['5']),
+	            "percent": "5",
+	            "taxable_amount": str(tax_5['base']),
+	            "name":'IVA'
+	        })
+	    if tax_0['base'] != 0:
+	        taxes.append({
+	            "tax_id": 1,
+	            "tax_amount": str(tax_0['0']),
+	            "percent": "0",
+	            "taxable_amount": str(tax_0['base']),
+	            "name":'IVA'
+	        })
+	    if int(ipo_value['base']) != 0:
+	        taxes.append(
+	            {
+	                "tax_id": 19,
+	                "tax_amount": int(ipo_value['45']),
+	                "percent": "0",
+	                "taxable_amount": int(ipo_value['base']),
+	                "unit_measure_id": "70",
+	                "per_unit_amount": cls.quantity_ipo,
+	                "base_unit_measure": cls.ipo_unit,
+	                "name":'IPOC'
+	            }
+	        )
+	    return taxes
 
 	@classmethod
 	def get_invoice(cls, pk):
@@ -152,6 +213,8 @@ class Invoice(models.Model):
 		data['type_document_id_company'] = Type_Document_I.objects.get(pk = data['company']['type_regime']).name
 		data['branch']['municipalities_branch'] = Municipalities.objects.get(pk = data['branch']['municipality']).name
 		data['payment_form']['name_payment_method'] = Payment_Method.objects.get(pk = data['payment_form']['payment_method']).name
+		data['list_taxes'] = cls.Tax_Totals(cls,data['details'])
+		print(data)
 
 		return data
 
@@ -179,6 +242,7 @@ class Invoice(models.Model):
 		except Exception as e:
 			message = str(e)
 		return {'result':result, 'message':message}
+
 
 	@classmethod
 	def annulled_invoice_by_product(cls, data):

@@ -74,7 +74,7 @@ class Company(models.Model):
 					municipality = Municipalities.objects.get(pk = data['municipality_id']),
 					token = token,
 					production = data['production'] if data['production'] is not None else False,
-					software = data['id'],
+					software_company = data['id'],
 					ping = data['pin']
 				)
 				company.save()

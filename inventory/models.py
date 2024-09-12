@@ -146,6 +146,7 @@ class Category(models.Model):
 class SubCategory(models.Model):
 	name = models.CharField(max_length = 150)
 	category = models.ForeignKey(Category, on_delete = models.CASCADE)
+	branch = models.ForeignKey(Branch, on_delete = models.CASCADE, null = True, blank = True)
 
 	def __str__(self):
 		return self.name
@@ -340,11 +341,16 @@ class Product(models.Model):
 		branch = employee.branch
 		supplier = None
 		subcat = None
-		try:
+		if 'pk_supplier' in data:
 			supplier = Supplier.objects.get(pk = data['pk_supplier'], branch=branch)
-			subcat = SubCategory.objects.get(pk = data['pk_subcategory'])
-		except Supplier.DoesNotExist as e:
-			pass
+		else:
+			supplier = Supplier.objects.get(name = 'Proveedor General', branch=branch)
+			
+		if 'pk_subcategory' in data:
+			subcat = SubCategory.objects.get(pk = data['pk_subcategory'], branch=branch)
+		else:
+			subcat = SubCategory.objects.get(name = "SUBCATEGORIA GENERAL", branch=branch)
+
 		
 		if data['excel'] == 1:
 			cls.Delete_Product_All(cls, branch)
