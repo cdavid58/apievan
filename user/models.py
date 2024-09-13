@@ -102,22 +102,22 @@ class Employee(models.Model):
             employee = None
         data = {'result':result, 'message':message}
         if employee is not None:
-            if not employee.active:
-                validate = License.validate_date(employee.branch)
-                if validate['result']:
-                    result = True
-                    message = "Success"
-                    employee.active = True
-                    employee.save()
-                    data = {
-                        'result':result, 'message':message, 'pk_employee': employee.pk, 'name': f"{employee.first_name} {employee.surname}",
-                        "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://159.203.170.123:8080/sellerlogin/{employee.branch.company.documentI}"
-                    }
-                    data['permission'] = [ i.name for i in employee.permission.all()]
-                else:
-                    data = {'result':result, 'message':validate['message']}
+            # if not employee.active:
+            validate = License.validate_date(employee.branch)
+            if validate['result']:
+                result = True
+                message = "Success"
+                employee.active = True
+                employee.save()
+                data = {
+                    'result':result, 'message':message, 'pk_employee': employee.pk, 'name': f"{employee.first_name} {employee.surname}",
+                    "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://159.203.170.123:8080/sellerlogin/{employee.branch.company.documentI}"
+                }
+                data['permission'] = [ i.name for i in employee.permission.all()]
             else:
-                data = {'result':result, 'message':"Ya tiene la cuenta abierta en otro dispositivo"}
+                data = {'result':result, 'message':validate['message']}
+            # else:
+            #     data = {'result':result, 'message':"Ya tiene la cuenta abierta en otro dispositivo"}
         return data
 
     @classmethod

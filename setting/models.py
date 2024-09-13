@@ -391,13 +391,14 @@ class Send_Dian:
         if int(ipo_value['base']) != 0:
             taxes.append(
                 {
-                    "tax_id": 19,
+                    "tax_id": 15,
                     "tax_amount": int(ipo_value['45']),
                     "percent": "0",
                     "taxable_amount": "0",
                     "unit_measure_id": "70",
                     "per_unit_amount": self.quantity_ipo,
-                    "base_unit_measure": self.ipo_unit
+                    "base_unit_measure": self.ipo_unit,
+                    "name":"Impuesto al consumo"
                 }
             )
         return taxes

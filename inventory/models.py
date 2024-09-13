@@ -268,6 +268,7 @@ class Product(models.Model):
 			'price6': self.price6
 		}
 		for price_field, price in prices.items():
+			price = price / (1 + (self.tax / 100))
 			profit = (price - self.cost) * self.quantity
 			profit_percentage = (profit / (self.cost * self.quantity)) * 100
 			profit_percentages[price_field] = profit_percentage
@@ -287,9 +288,10 @@ class Product(models.Model):
 
 	    for price_field, price in prices.items():
 	        try:
-	            profit_percentage = ((price - self.cost) / price) * 100
-	            profit_amount = (profit_percentage / 100) * price  # Calculate the amount of profit in money
-	            profit_amounts[price_field] = profit_amount
+	        	price = price / (1 + (self.tax / 100))
+	        	profit_percentage = ((price - self.cost) / price) * 100
+	        	profit_amount = (profit_percentage / 100) * price  # Calculate the amount of profit in money
+	        	profit_amounts[price_field] = profit_amount
 	        except ZeroDivisionError as e:
 	            profit_amounts[price_field] = 0
 	    return profit_amounts
@@ -307,12 +309,13 @@ class Product(models.Model):
 		n = 1
 		for price_field, price in prices.items():
 		    try:
-		        discounted_price = price - (price * (self.discount / 100))
-		        if discounted_price == self.cost:
-		            profit_percentage = 0  # If price equals cost after discount, profit percentage is 0
-		        else:
-		            profit_percentage = (((discounted_price - self.cost) / discounted_price) * 100)
-		        profit_percentages.append({
+		    	price = price / (1 + (self.tax / 100))
+		    	discounted_price = price - (price * (self.discount / 100))
+		    	if discounted_price == self.cost:
+		    		profit_percentage = 0
+		    	else:
+		    		profit_percentage = (((discounted_price - self.cost) / discounted_price) * 100)
+		    	profit_percentages.append({
 		            'percentage': f'{profit_percentage:.1f}%',
 		            'name': price_field,
 		            'id': n
