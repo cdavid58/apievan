@@ -294,17 +294,20 @@ class Resolution(models.Model):
 		result = False
 		message = None
 		branch = Branch.objects.get(pk = data['pk_branch'])
-		url = f"{env.URL_API}/numbering-range"
+		url = f"{env.URL_API}numbering-range"
+		print(url)
 		payload = json.dumps({
 		  "NIT": branch.company.documentI,
 		  "IDSoftware": branch.company.software_company
 		})
+		print(payload)
 		headers = {
 		  'Content-Type': 'application/json',
 		  'accept': 'application/json',
 		  'Authorization': f'Bearer {branch.company.token}'
 		}
 		response = requests.request("POST", url, headers= headers, data=payload)
+		print(response.text)
 		_data = json.loads(response.text)["ResponseDian"]["Envelope"]["Body"]["GetNumberingRangeResponse"]["GetNumberingRangeResult"]["ResponseList"]["NumberRangeResponse"]
 		if isinstance(_data, list):
 			for i in _data:

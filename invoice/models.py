@@ -332,6 +332,7 @@ class Invoice(models.Model):
 		branch = employee.branch
 		invoice = None
 		type_document = 1
+		print(data)
 
 		try:			
 			validate = License.validate_date(employee.branch)
@@ -443,7 +444,8 @@ class Details_Invoice(models.Model):
 		try:
 			product = Product.objects.get(code = data['code'], branch = invoice.branch)
 			ultra_processed = product.ultra_processed
-			cost = round((data['price'] / data['quantity']) - (data['ipo'] + ultra_processed + data['tax']),2) if 'cost' not in data else data['cost']
+			print(data,'Invoice')
+			cost = round( (data['code'] + data['tax']))
 			details_invoice = cls(
 				code = data['code'],
 				name = data['product'],

@@ -367,28 +367,28 @@ class Send_Dian:
         tax_0 = self.values_taxes(0)
         ipo_value = self.values_taxes(45)
 
-        if tax_19['base'] != 0:
+        if tax_19['base'] > 0:
             taxes.append({
                 "tax_id": 1,
                 "tax_amount": str(tax_19['19']),
                 "percent": "19",
                 "taxable_amount": str(tax_19['base'])
             })
-        if tax_5['base'] != 0:
+        if tax_5['base'] > 0:
             taxes.append({
                 "tax_id": 1,
                 "tax_amount": str(tax_5['5']),
                 "percent": "5",
                 "taxable_amount": str(tax_5['base'])
             })
-        if tax_0['base'] != 0:
+        if tax_0['base'] > 0:
             taxes.append({
                 "tax_id": 1,
                 "tax_amount": str(tax_0['0']),
                 "percent": "0",
                 "taxable_amount": str(tax_0['base'])
             })
-        if int(ipo_value['base']) != 0:
+        if int(ipo_value['base']) > 0:
             taxes.append(
                 {
                     "tax_id": 15,
@@ -410,7 +410,7 @@ class Send_Dian:
             cost = round( (float(i['cost']) + float(i['tax'])) * quantity)
             tax = round(float(i['tax']) * quantity)
             ipo = round(float(i['ipo']) * quantity)
-            total =  cost
+            total =  cost + ipo
             
             data.append(
                 {
@@ -426,22 +426,23 @@ class Send_Dian:
                             "taxable_amount": total,
                             "percent": i['tax_value']
                         }, {
-                            "tax_id": 19,
+                            "tax_id": 15,
                             "tax_amount": ipo,
                             "percent": "0",
                             "taxable_amount": "0",
                             "unit_measure_id": "70",
                             "per_unit_amount": quantity,
-                            "base_unit_measure": round(float(i['ipo']))
+                            "base_unit_measure": round(float(i['ipo'])),
+                            "name": "Impuesto al consumo"
                         }
                     ],
                     "description": i['name'],
                     "notes": '',
                     "code": i['code'],
                     "type_item_identification_id": 4,
-                    "price_amount": total,
+                    "price_amount": self.invoice['total'],
                     "base_quantity": quantity,
-                    "neto": total
+                    "neto": self.invoice['total']
                 }
             )
         return data
@@ -518,6 +519,7 @@ class Send_Dian:
             payload = json.dumps(data)
             print(url)
             print(payload)
+            return {'result':True, 'message':messages}
             headers = {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
