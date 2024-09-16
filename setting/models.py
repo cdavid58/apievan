@@ -333,9 +333,9 @@ class Send_Dian:
         return sum(int(round(i[f'{item}'])) * round(int(i['quantity'])) for i in self.invoice['details'])
 
     def Legal_Monetary_Totals(self):
-        subtotal = self.sum_value('cost') + self.sum_value('tax')
+        subtotal = self.sum_value('cost')
         ipo = self.sum_value('ipo')
-        self.total_invoice = subtotal + ipo        
+        self.total_invoice = subtotal + ipo + self.sum_value('tax')        
         
         return {
             "line_extension_amount": subtotal,
@@ -352,7 +352,7 @@ class Send_Dian:
         for item in self.invoice['details']:
             if int(tax) == int(item['tax_value']) and int(tax) != 45:
                 total_tax += round((item['tax']  * item['quantity']))
-                total_base += round((item['cost'] + item['tax']) * item['quantity'])
+                total_base += round(item['cost'] * item['quantity'])
             if int(item['ipo']) > 0 and int(tax) == 45:
                 total_tax += round((item['ipo']  * item['quantity']))
                 total_base += round((item['price'] * item['quantity']))
@@ -398,7 +398,7 @@ class Send_Dian:
                     "unit_measure_id": "70",
                     "per_unit_amount": self.quantity_ipo,
                     "base_unit_measure": self.ipo_unit,
-                    "name":"Impuesto al consumo"
+                    "tax_name":"Impuesto al consumo"
                 }
             )
         return taxes
@@ -410,20 +410,21 @@ class Send_Dian:
             cost = round( (float(i['cost']) + float(i['tax'])) * quantity)
             tax = round(float(i['tax']) * quantity)
             ipo = round(float(i['ipo']) * quantity)
-            total =  cost + ipo
+            total =  round(float(i['subtotals'] + tax))
+            subtotal = round(float(i['price']) * quantity )
             
             data.append(
                 {
                     "ipo": ipo,
                     "unit_measure_id": 70,
                     "invoiced_quantity": quantity,
-                    "line_extension_amount": total,
+                    "line_extension_amount": subtotal,
                     "free_of_charge_indicator": False,
                     "tax_totals": [
                         {
                             "tax_id": 1,
                             "tax_amount": tax,
-                            "taxable_amount": total,
+                            "taxable_amount": subtotal,
                             "percent": i['tax_value']
                         }, {
                             "tax_id": 15,
@@ -433,16 +434,16 @@ class Send_Dian:
                             "unit_measure_id": "70",
                             "per_unit_amount": quantity,
                             "base_unit_measure": round(float(i['ipo'])),
-                            "name": "Impuesto al consumo"
+                            "tax_name": "Impuesto al consumo"
                         }
                     ],
                     "description": i['name'],
                     "notes": '',
                     "code": i['code'],
                     "type_item_identification_id": 4,
-                    "price_amount": self.invoice['total'],
+                    "price_amount": total,
                     "base_quantity": quantity,
-                    "neto": self.invoice['total']
+                    "neto": total
                 }
             )
         return data
@@ -519,7 +520,7 @@ class Send_Dian:
             payload = json.dumps(data)
             print(url)
             print(payload)
-            return {'result':True, 'message':messages}
+            #return {'result':True, 'message':data}
             headers = {
               'Content-Type': 'application/json',
               'Accept': 'application/json',

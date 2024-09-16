@@ -311,7 +311,10 @@ class Invoice(models.Model):
 					'total': i.total,
 					"state":i.state,
 					"cancelled":i.cancelled,
-					"annulled":i.annulled
+					"annulled":i.annulled,
+					"cufe": i.cufe,
+					"pdf": i.urlinvoicepdf,
+					"pk_company": branch.company.documentI
 				}
 				for i in cls.objects.filter(branch = branch, annulled = True if data['type_document'] == 4 else False ).order_by('-pk')
 			]
@@ -391,7 +394,7 @@ class Invoice(models.Model):
 					print("Resultado")
 					if result:
 						_data_ = {'pk_invoice':pk_invoice,'type_document': type_document}
-						Invoice.send_invoice_dian(_data_)
+						#Invoice.send_invoice_dian(_data_)
 				else:
 					result = license['result']
 					message = license['message']
@@ -445,13 +448,13 @@ class Details_Invoice(models.Model):
 			product = Product.objects.get(code = data['code'], branch = invoice.branch)
 			ultra_processed = product.ultra_processed
 			print(data,'Invoice')
-			cost = round( (data['code'] + data['tax']))
+			cost = round( (int(data['price']) + int(data['tax'])))
 			details_invoice = cls(
 				code = data['code'],
 				name = data['product'],
 				quantity = data['quantity'],
 				tax = data['tax'],
-				cost = cost,
+				cost = data['price'],
 				price = data['price'],
 				ipo = data['ipo'],
 				ultra_processed = ultra_processed,
@@ -476,6 +479,7 @@ class Details_Invoice(models.Model):
 						return {'result':result, 'message':message,'total':data['totalValue']}
 		except Exception as e:
 			message = str(e)
+			print("Error Details")
 		return {'result':result, 'message':message,'total':data['totalValue']}
 
 class Payment_Forms(models.Model):
