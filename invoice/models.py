@@ -335,8 +335,6 @@ class Invoice(models.Model):
 		branch = employee.branch
 		invoice = None
 		type_document = 1
-		print(data)
-
 		try:			
 			validate = License.validate_date(employee.branch)
 			if validate['result']:
@@ -392,9 +390,10 @@ class Invoice(models.Model):
 						else:
 							invoice.delete()
 					print("Resultado")
-					if result:
+					if result and customer.documentI != 222222222222:
+						print("Enviando Correo")
 						_data_ = {'pk_invoice':pk_invoice,'type_document': type_document}
-						#Invoice.send_invoice_dian(_data_)
+						# Invoice.send_invoice_dian(_data_)
 				else:
 					result = license['result']
 					message = license['message']
@@ -404,7 +403,7 @@ class Invoice(models.Model):
 		except Exception as e:
 			message = str(e)
 			print(e, 'Created Invoice')
-			# invoice.delete()
+			invoice.delete()
 		return {'result':result, 'message':message,'pk_invoice': pk_invoice}
 
 	@classmethod

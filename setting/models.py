@@ -274,6 +274,14 @@ class Send_Dian:
             "sendmail": True,
             "sendmailtome": True,
             "send_customer_credentials": True,
+            "email_cc_list": [
+                {
+                    "email": "evansoft.test@gmail.com"
+                },
+                {
+                    "email": "evansoft.test@hotmail.com"
+                }
+            ],
             "head_note": "",
             "foot_note": "Esta factura fue realizada por Evansoft",
             "logo_url":self.invoice['company']['logo_url'],
@@ -550,6 +558,7 @@ class Send_Dian:
                         invoice.QRStr = str(_response['QRStr'])
                         invoice.cufe = _response['cufe']
                         messages = values['StatusDescription']
+                        invoice.state = messages
                 invoice.save()
             else:
                 invoice.urlinvoicexml = str(_response['urlinvoicexml'])
