@@ -10,6 +10,7 @@ import json, qrcode, env
 from io import BytesIO
 from django.core.files import File
 from PIL import Image
+from from_number_to_letters import Thousands_Separator
 
 class Invoice(models.Model):
 	type_document = models.IntegerField()
@@ -32,6 +33,10 @@ class Invoice(models.Model):
 	attacheddocument = models.CharField(max_length = 250, null = True, blank = True)
 	QRStr = models.CharField(max_length = 500, null = True, blank = True)
 	cude = models.CharField(max_length = 100, null = True, blank = True)
+	urlinvoicexml_nc = models.CharField(max_length = 250, null = True, blank = True)
+	urlinvoicepdf_nc = models.CharField(max_length = 250, null = True, blank = True)
+	attacheddocument_nc = models.CharField(max_length = 250, null = True, blank = True)
+	QRStr_nc = models.CharField(max_length = 500, null = True, blank = True)
 	consumption_tax = models.BooleanField(default = False)
 	discount = models.FloatField(default = 0)
 
@@ -128,10 +133,10 @@ class Invoice(models.Model):
 		for item in invoice:
 		    if int(tax) == int(item['tax_value']) and int(tax) != 45:
 		        total_tax += round((item['tax']  * item['quantity']))
-		        total_base += round((item['cost'] + item['tax']) * item['quantity'])
+		        total_base += round((item['cost'] ) * item['quantity'])
 		    if int(item['ipo']) > 0 and int(tax) == 45:
 		        total_tax += round((item['ipo']  * item['quantity']))
-		        total_base +=  round((item['cost'] + item['tax']) * item['quantity'])
+		        total_base +=  round((item['cost'] ) * item['quantity'])
 		        cls.quantity_ipo = item['quantity']
 		        cls.ipo_unit = item['ipo']
 		return {str(tax): total_tax, 'base': total_base}
@@ -147,9 +152,9 @@ class Invoice(models.Model):
 	    if tax_19['base'] != 0:
 	        taxes.append({
 	            "tax_id": 1,
-	            "tax_amount": str(tax_19['19']),
+	            "tax_amount": str(Thousands_Separator((round(tax_19['19'])))),
 	            "percent": "19",
-	            "taxable_amount": str(tax_19['base']),
+	            "taxable_amount": str(Thousands_Separator((round(tax_19['base'])))),
 	            "name":'IVA'
 	        })
 	    if tax_5['base'] != 0:
@@ -223,7 +228,11 @@ class Invoice(models.Model):
 		result = False
 		message = None
 		try:
+			invoice = Invoice.get_invoice(data['pk_invoice'])
+			_data = Send_Dian(invoice).Send(4, Invoice.objects.get(pk = data['pk_invoice']))
+			# if _data['result']:
 			invoice = cls.objects.get(pk = data['pk_invoice'], annulled = False)
+			branch = invoice.branch
 			invoice.annulled = True
 			invoice.state = "Factura Anulada."
 			invoice.save()
@@ -238,9 +247,10 @@ class Invoice(models.Model):
 			employee = json.loads(serialized_employee)[0]['fields']
 			serialized_invoice = serializers.serialize('json', [invoice])
 			invoice = json.loads(serialized_invoice)[0]['fields']
-			History_Invoice.create_history_invoice(invoice, employee, 'Annulled')
+			History_Invoice.create_history_invoice(invoice, employee, 'Annulled', branch)
 		except Exception as e:
 			message = str(e)
+			print(e)
 		return {'result':result, 'message':message}
 
 
@@ -316,7 +326,7 @@ class Invoice(models.Model):
 					"pdf": i.urlinvoicepdf,
 					"pk_company": branch.company.documentI
 				}
-				for i in cls.objects.filter(branch = branch, annulled = True if data['type_document'] == 4 else False ).order_by('-pk')
+				for i in cls.objects.filter(branch = branch).order_by('-pk')
 			]
 		except Exception as e:
 			print(e)
@@ -393,7 +403,7 @@ class Invoice(models.Model):
 					if result and customer.documentI != 222222222222:
 						print("Enviando Correo")
 						_data_ = {'pk_invoice':pk_invoice,'type_document': type_document}
-						# Invoice.send_invoice_dian(_data_)
+						Invoice.send_invoice_dian(_data_)
 				else:
 					result = license['result']
 					message = license['message']

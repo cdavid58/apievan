@@ -260,7 +260,7 @@ class Send_Dian:
         return {
             "number": self.invoice['number'],
             "type_document_id": self.type_document_id,
-            "date": str(self.invoice['date']),
+            "date": str(self.invoice['date']) if self.type_document_id == 1 else str(date.today()),
             "time": str(time),
             "resolution_number": self.invoice['resolution']['resolution'],
             "prefix": self.invoice['prefix'],
@@ -292,8 +292,8 @@ class Send_Dian:
 
     def Billing_Reference(self):
         return {
-            "number": self.invoice['number'],
-            "uuid": self.invoice['number'],
+            "number": str(self.invoice['number']),
+            "uuid": self.invoice['cufe'],
             "issue_date": self.invoice['date']
         }
 
@@ -506,7 +506,8 @@ class Send_Dian:
 
             url = f"{env.URL_API}{document}"
             data = self.Data()
-            data['payment_form'] = self.Payment_Form()
+            if type_document != 4:
+                data['payment_form'] = self.Payment_Form()
             data['legal_monetary_totals'] = self.Legal_Monetary_Totals()
             data['tax_totals'] = self.Tax_Totals()
             data[key_customer] = self.Customer()
@@ -549,17 +550,29 @@ class Send_Dian:
                 else:
                     messages = _response['message']
                     values = _response['ResponseDian']['Envelope']['Body']['SendBillSyncResponse']['SendBillSyncResult']
-                    if values['IsValid']:
-                        invoice.urlinvoicexml = str(_response['urlinvoicexml'])
-                        invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
-                        if str(_response['urlinvoiceattached']) != '':
-                            invoice.attacheddocument = str(_response['urlinvoiceattached'])
-                            result = True
-                        invoice.QRStr = str(_response['QRStr'])
-                        invoice.cufe = _response['cufe']
-                        messages = values['StatusDescription']
-                        invoice.state = messages
-                invoice.save()
+                    if values['IsValid'] == True:
+                        if type_document == 4:
+                            invoice.urlinvoicexml_nc = str(_response['urlinvoicexml'])
+                            invoice.urlinvoicepdf_nc = str(_response['urlinvoicepdf'])
+                            if str(_response['urlinvoiceattached']) != '':
+                                invoice.attacheddocument_nc = str(_response['urlinvoiceattached'])
+                                result = True
+                            invoice.QRStr_nc = str(_response['QRStr'])
+                            invoice.cude = _response['cude']
+                            messages = values['StatusDescription']
+                            invoice.state = messages
+                            invoice.save()
+                        else:
+                            invoice.urlinvoicexml = str(_response['urlinvoicexml'])
+                            invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
+                            if str(_response['urlinvoiceattached']) != '':
+                                invoice.attacheddocument = str(_response['urlinvoiceattached'])
+                                result = True
+                            invoice.QRStr = str(_response['QRStr'])
+                            invoice.cufe = _response['cufe']
+                            messages = values['StatusDescription']
+                            invoice.state = messages
+                            invoice.save()
             else:
                 invoice.urlinvoicexml = str(_response['urlinvoicexml'])
                 invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])

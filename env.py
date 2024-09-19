@@ -8,7 +8,7 @@ URL_QR = "C:/Users/Public/Videos/Nueva carpeta (2)/apievan/static/QR/"
 URL_QR_IN_USE = URL_QR
 
 # URL_API = "http://localhost/apidian/public/api/ubl2.1/"
-URL_API = "http://theriosoft.com:8080/api/ubl2.1/"
+URL_API = "http://104.248.63.144:8080/api/ubl2.1/"
 # URL_API = "http://159.203.170.123:8080/api/ubl2.1/"
 # URL_API = "https://evansoft.factura.com/api/public/api/ubl2.1/"
 # URL_API = ""
