@@ -411,9 +411,10 @@ class Invoice(models.Model):
 				result = validate['result']
 				message = validate['message']
 		except Exception as e:
+			print(data)
 			message = str(e)
 			print(e, 'Created Invoice')
-			invoice.delete()
+			#invoice.delete()
 		return {'result':result, 'message':message,'pk_invoice': pk_invoice}
 
 	@classmethod
