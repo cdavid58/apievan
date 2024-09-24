@@ -274,9 +274,17 @@ class Send_Dian:
             "sendmail": True,
             "sendmailtome": True,
             "send_customer_credentials": True,
+            "email_cc_list": [
+                {
+                    "email": "evansoft.test@gmail.com"
+                },
+                {
+                    "email": "evansoft.test@hotmail.com"
+                }
+            ],
             "head_note": "",
             "foot_note": "Esta factura fue realizada por Evansoft",
-            "logo_url":self.invoice['company']['logo_url'],
+            "logo":self.invoice['company']['logo_url'],
             "html_header": r'<h1 style=\"color: #5e9ca0;\">Se&ntilde;or(es), XXXXXXXXXXXXXXXXXXX identificado con NIT 99999999-9</h1><h2 style=\"color: #2e6c80;\">Le informamos que ha recibido un documento electronico de: YYYYYYYYYYYYYYYYYYYYYYYYY</h2>',
             "html_buttons": r'<table style=\"border-collapse: collapse; width: 100%;\" border=\"1\"><tbody><tr><td style=\"width: 100%;\"><h2><strong><span style=\"color: #008080;\">Puede descargar su factura mediante el siguiente enlace:</span></strong></h2></td></tr><tr><td style=\"width: 100%;\"><h4><a href=\"https://www.facilwebnube.com/apidian2021/public/index.php/api/download/88261176/FES-FE369.pdf\" target=\"_blank\">Haga click aqui para descargar su factura.</a></h4></td></tr></tbody></table>',
             "html_footer": r'<table style=\"border-collapse: collapse; width: 100%;\" border=\"1\"><tbody><tr><td style=\"width: 100%;\"><h2><strong><span style=\"color: #008080;\">Previamente recibio un correo con las credenciales de ingreso a la plataforma.</span></strong></h2></td></tr><tr><td style=\"width: 100%;\"><div><h4><strong>Este es un sistema autom&aacute;tico de aviso, por favor no responda este mensaje de correo.</strong></h4></div></td></tr></tbody></table>',
@@ -284,8 +292,8 @@ class Send_Dian:
 
     def Billing_Reference(self):
         return {
-            "number": self.invoice['number'],
-            "uuid": self.invoice['number'],
+            "number": str(self.invoice['number']),
+            "uuid": self.invoice['cufe'],
             "issue_date": self.invoice['date']
         }
 
@@ -335,6 +343,7 @@ class Send_Dian:
     def Legal_Monetary_Totals(self):
         subtotal = self.sum_value('cost')
         ipo = self.sum_value('ipo')
+        self.ipoConsumeReal = ipo
         self.total_invoice = subtotal + ipo + self.sum_value('tax')        
         
         return {
@@ -477,101 +486,116 @@ class Send_Dian:
         result = False
         messages = None
         invoice = invoice
-        if self.invoice['company']['verified']:
-            self.type_document_id = type_document
-            production = self.invoice['company']['production']
-            document = "invoice" if production else f"invoice/{self.invoice['company']['testsetid']}"
-            key_invoice = 'invoice_lines'
-            key_customer = "customer"
+        try:
+            if self.invoice['company']['verified']:
+                self.type_document_id = type_document
+                production = self.invoice['company']['production']
+                document = "invoice" if production else f"invoice/{self.invoice['company']['testsetid']}"
+                key_invoice = 'invoice_lines'
+                key_customer = "customer"
 
-            if type_document == 11:
-                document = "support-document"
-                key_customer = "seller"
-            elif type_document == 4:
-                document = "credit-note"
-                key_invoice = "credit_note_lines"
-            elif type_document == 5:
-                document = "debit-note"
-                key_invoice = "debit_note_lines"
-            elif int(type_document) == 15:
-                document = "eqdoc/no_test_set_id"
+                if type_document == 11:
+                    document = "support-document"
+                    key_customer = "seller"
+                elif type_document == 4:
+                    document = "credit-note"
+                    key_invoice = "credit_note_lines"
+                elif type_document == 5:
+                    document = "debit-note"
+                    key_invoice = "debit_note_lines"
+                elif int(type_document) == 15:
+                    document = "eqdoc/no_test_set_id"
 
-            url = f"{env.URL_API}{document}"
-            data = self.Data()
-            data['payment_form'] = self.Payment_Form()
-            data['legal_monetary_totals'] = self.Legal_Monetary_Totals()
-            data['tax_totals'] = self.Tax_Totals()
-            data[key_customer] = self.Customer()
-            data[key_invoice] = self.Invoice_Lines()
+                url = f"{env.URL_API}{document}"
+                data = self.Data()
+                if type_document != 4:
+                    data['payment_form'] = self.Payment_Form()
+                data['legal_monetary_totals'] = self.Legal_Monetary_Totals()
+                data['tax_totals'] = self.Tax_Totals()
+                data[key_customer] = self.Customer()
+                data[key_invoice] = self.Invoice_Lines()
 
-            if type_document == 4 or type_document == 5:
-                data['billing_reference'] = self.Billing_Reference()
-            if int(type_document) == 15:
-                data['software_manufacturer'] = self.Software_Manufacturer()
-                data['buyer_benefits'] = self.Buyer_Benefits()
-                data['cash_information'] = self.Cash_Information()
+                if type_document == 4 or type_document == 5:
+                    data['billing_reference'] = self.Billing_Reference()
+                if int(type_document) == 15:
+                    data['software_manufacturer'] = self.Software_Manufacturer()
+                    data['buyer_benefits'] = self.Buyer_Benefits()
+                    data['cash_information'] = self.Cash_Information()
 
-            if type_document == 11:
-                for i in data['invoice']:
-                    print(i)
-                    # data[key_invoice]["type_generation_transmition_id"]= 1
-                    # data[key_invoice]["start_date"] = "2023-05-01"
-
-            payload = json.dumps(data)
-            print(url)
-            print(payload)
-            #return {'result':True, 'message':data}
-            headers = {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': f'Bearer {self.invoice["company"]["token"]}'
-            }
-            response = requests.request("POST", url, headers=headers, data=payload)
-            _response = json.loads(response.text)
-            print(_response)
-            print(response)
-            result = False
-            messages = []
-            if production:
-                if 'errors' in _response:
-                    for i,j in _response['errors'].items():
-                        messages.append(_response['errors'][i][0])
-                elif 'success' in _response:
-                    messages = _response['message']
+                if type_document == 11:
+                    for i in data['invoice']:
+                        print(i)
+                        # data[key_invoice]["type_generation_transmition_id"]= 1
+                        # data[key_invoice]["start_date"] = "2023-05-01"
+                data['ipoConsumeReal'] = self.ipoConsumeReal
+                payload = json.dumps(data)
+                with open(f"/deploy/api/errores/JSON_{self.invoice['number']}.txt",'w') as file:
+                    file.write(str(data))
+                headers = {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'Authorization': f'Bearer {self.invoice["company"]["token"]}'
+                }
+                response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+                _response = json.loads(response.text)
+                with open("/deploy/api/errores/response_dian.txt",'w') as file:
+                    file.write(str(response.text))
+                result = False
+                messages = []
+                if production:
+                    if 'errors' in _response:
+                        for i,j in _response['errors'].items():
+                            messages.append(_response['errors'][i][0])
+                    elif 'success' in _response:
+                        messages = _response['message']
+                    else:
+                        messages = _response['message']
+                        values = _response['ResponseDian']['Envelope']['Body']['SendBillSyncResponse']['SendBillSyncResult']
+                        if values['IsValid']:
+                            if type_document == 4:
+                                invoice.urlinvoicexml_nc = str(_response['urlinvoicexml'])
+                                invoice.urlinvoicepdf_nc = str(_response['urlinvoicepdf'])
+                                if str(_response['urlinvoiceattached']) != '':
+                                    invoice.attacheddocument_nc = str(_response['urlinvoiceattached'])
+                                    result = True
+                                invoice.QRStr_nc = str(_response['QRStr'])
+                                invoice.cude = _response['cude']
+                                messages = values['StatusDescription']
+                                invoice.state = messages
+                                invoice.save()
+                            else:
+                                invoice.urlinvoicexml = str(_response['urlinvoicexml'])
+                                invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
+                                if str(_response['urlinvoiceattached']) != '':
+                                    invoice.attacheddocument = str(_response['urlinvoiceattached'])
+                                    result = True
+                                invoice.QRStr = str(_response['QRStr'])
+                                invoice.cufe = _response['cufe']
+                                messages = values['StatusDescription']
+                                invoice.state = messages
+                                invoice.save()
                 else:
-                    messages = _response['message']
-                    values = _response['ResponseDian']['Envelope']['Body']['SendBillSyncResponse']['SendBillSyncResult']
-                    if values['IsValid']:
-                        invoice.urlinvoicexml = str(_response['urlinvoicexml'])
-                        invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
-                        if str(_response['urlinvoiceattached']) != '':
-                            invoice.attacheddocument = str(_response['urlinvoiceattached'])
-                            result = True
-                        invoice.QRStr = str(_response['QRStr'])
-                        invoice.cufe = _response['cufe']
-                        messages = values['StatusDescription']
-                invoice.save()
+                    invoice.urlinvoicexml = str(_response['urlinvoicexml'])
+                    invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
+                    invoice.attacheddocument = str(_response['urlinvoiceattached'])
+                    invoice.QRStr = str(_response['QRStr'])
+                    invoice.cufe = _response['cufe']
+                    result = True
+                    invoice.save()
+                data = {'token':f'Bearer {self.invoice["company"]["token"]}', 'pdf': f"{self.invoice['company']['documentI']}/{_response['urlinvoicepdf']}",'prefix':self.invoice['prefix'],'number':self.invoice['number'],
+                            'email':[{'email':self.invoice['branch']['email']}] if str(self.invoice['customer']['identification_number']) == "222222222222" else [{'email':self.invoice['branch']['email'],'email': self.invoice['customer']['email']}]}
             else:
-                invoice.urlinvoicexml = str(_response['urlinvoicexml'])
-                invoice.urlinvoicepdf = str(_response['urlinvoicepdf'])
-                invoice.attacheddocument = str(_response['urlinvoiceattached'])
-                invoice.QRStr = str(_response['QRStr'])
-                invoice.cufe = _response['cufe']
-                result = True
-                invoice.save()
-            data = {'token':f'Bearer {self.invoice["company"]["token"]}', 'pdf': f"{self.invoice["company"]["documentI"]}/{_response['urlinvoicepdf']}",'prefix':self.invoice['prefix'],'number':self.invoice['number'],
-                        'email':[{'email':self.invoice['branch']['email']}] if str(self.invoice['customer']['identification_number']) == "222222222222" else [{'email':self.invoice['branch']['email'],'email': self.invoice['customer']['email']}]}
-            # if result:
-            #     self.Send_Emial(data)
-        else:
-            messages = "ERROR, ESTA COMPAÑIA NO ESTA EN VERIFICADA"
-            print("Error")
+                messages = "ERROR, ESTA COMPAÑIA NO ESTA EN VERIFICADA"
+        except Exception as _ex:
+            with open("/deploy/api/errores/send_dian.txt",'w') as file:
+                file.write(str(_ex))
+            messages = str(_ex)
         return {'result':result, 'message':messages}
 
     def pdf_to_base64(self, input_pdf_path: str) -> str:
         try:
-            # with open(f"/var/www/html/api/storage/app/public/{input_pdf_path}", "rb") as pdf_file:
-            with open(f"C:/laragon/www/apidian/storage/app/public/{input_pdf_path}", "rb") as pdf_file:
+            with open(f"/var/www/html/api/storage/app/public/{input_pdf_path}", "rb") as pdf_file:
+            # with open(f"C:/laragon/www/apidian/storage/app/public/{input_pdf_path}", "rb") as pdf_file:
                 pdf_bytes = pdf_file.read()
             base64_string = base64.b64encode(pdf_bytes).decode('utf-8')
             return base64_string
@@ -689,7 +713,7 @@ class Credi_Note_Product:
     def Billing_Reference(self):
         print(self.invoice['cufe'])
         return {
-            "number": f'{self.invoice['prefix']}{self.invoice['number']}',
+            "number": f'{self.invoice["prefix"]}{self.invoice["number"]}',
             "uuid": self.invoice['cufe'],
             "issue_date": self.invoice['date']
         }

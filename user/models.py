@@ -111,7 +111,7 @@ class Employee(models.Model):
                 employee.save()
                 data = {
                     'result':result, 'message':message, 'pk_employee': employee.pk, 'name': f"{employee.first_name} {employee.surname}",
-                    "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://159.203.170.123:8080/sellerlogin/{employee.branch.company.documentI}"
+                    "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://104.248.63.144:8080/sellerlogin/{employee.branch.company.documentI}"
                 }
                 data['permission'] = [ i.name for i in employee.permission.all()]
             else:

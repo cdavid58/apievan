@@ -99,11 +99,12 @@ class Branch(models.Model):
 	email = models.EmailField()
 	verified = models.BooleanField(default= False)
 	company = models.ForeignKey(Company, on_delete= models.CASCADE)
-	psswd = models.CharField(max_length = 10,default = get_random_string(length=10))
+	psswd = models.CharField(max_length = 30,default = get_random_string(length=10))
 	value_coin = models.IntegerField(null= True, blank=True, default= 0)
 	amount_min = models.IntegerField(null= True, blank=True, default= 0)
 	municipality = models.ForeignKey(Municipalities, on_delete = models.CASCADE, null = True, blank = True)
 	consumption_tax = models.IntegerField(default = 0)
+	logo_branch = models.ImageField(upload_to = "Logo_branch", null = True, blank = True,default = "Logo_Company/withOut.png")
 
 	@classmethod
 	def get_branch(cls, data):
