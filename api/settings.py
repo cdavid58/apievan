@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-a=hgmr^ba8@b%v7!&g4+l^a4cy@=-fvdi-s@-k38(a%$t3i2@d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['evansoft.ddns.net']
+ALLOWED_HOSTS = ['evansoft.ddns.net','127.0.0.1']
 
 
 # Application definition
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'shopping','customer','invoice',
     'wallet','transfers','evangeli',
     'emails','payroll','report',
+    'accounting',
 ]
 
 MIDDLEWARE = [

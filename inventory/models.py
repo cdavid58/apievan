@@ -492,6 +492,7 @@ class Product(models.Model):
 		try:
 			if not json:
 				pr = Product_Reserved.objects.get(user = employee, product= cls.objects.get(code = code))
+				print(pr)
 				pr.delete()
 			Best_Selling_Product.best_selling_product(code, branch, quantity)
 			result = True

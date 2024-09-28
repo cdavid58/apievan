@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^emails/', include('emails.urls')),
     url(r'^report/', include('report.urls')),
     url(r'^payroll/', include('payroll.urls')),
+    url(r'^accounting/', include('accounting.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

@@ -30,6 +30,7 @@ class Employee(models.Model):
     permission = models.ManyToManyField(Permission, blank = True, null = True)
     active = models.BooleanField(default = False)
     internal_email = models.EmailField(null=True, blank=True, unique= True)
+    img = models.ImageField(upload_to = "Img_User", null = True, blank = True, default = "Img_User/withOut.png")
     
     
     @classmethod
@@ -111,7 +112,8 @@ class Employee(models.Model):
                 employee.save()
                 data = {
                     'result':result, 'message':message, 'pk_employee': employee.pk, 'name': f"{employee.first_name} {employee.surname}",
-                    "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://104.248.63.144:8080/sellerlogin/{employee.branch.company.documentI}"
+                    "pk_branch":employee.branch.pk, "name_branch": employee.branch.name, 'logo': env.URL_LOCAL + employee.branch.company.logo.url, 'url_seller': f"http://104.248.63.144:8080/sellerlogin/{employee.branch.company.documentI}",
+                    "unit":employee.branch.unit, "bale":employee.branch.bale,"quantity":employee.branch.quantity,'img_user':env.URL_LOCAL + employee.img.url
                 }
                 data['permission'] = [ i.name for i in employee.permission.all()]
             else:
@@ -203,6 +205,7 @@ class Employee(models.Model):
             for i in Employee.objects.filter(branch = branch):
                 serialized_employee = serializers.serialize('json', [i])
                 employee = json.loads(serialized_employee)[0]
+                employee['fields']['img'] = f"{env.URL_LOCAL}/media/{employee['fields']['img']}"
                 data.append(employee)
             result = True
             message = 'Success'
@@ -245,6 +248,7 @@ class Employee(models.Model):
         data['pk_Type_Contract'] =  Type_Contract.objects.get(id = data['type_contract_id'])._id
         data['name_Type_Contract'] =  Type_Contract.objects.get(id = data['type_contract_id']).name
         data['permission'] = [ {'pk_permission':i.pk,'name_permission':i.name} for i in employee.permission.all()]
+        data['img'] = f"{env.URL_LOCAL}/media/{data['img']}"
         return data
 
 class History_Employee(models.Model):

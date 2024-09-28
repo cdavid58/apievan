@@ -35,6 +35,7 @@ class Payroll(models.Model):
 		employee = Employee.objects.get(pk = data['pk_employee'])
 		value = json.loads(serializers.serialize('json', [employee]))[0]
 		_data = value['fields']
+		_data['img'] = f"{env.URL_LOCAL}/media/{_data['img']}"
 		_data['pk_employee'] = value['pk']
 		_data['municipality_name'] = Municipalities.objects.get(pk = _data['municipality_id']).name
 		_data['total_selling'] =0# sum(i.total for i in Invoice.objects.filter(employee = employee))
